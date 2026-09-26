@@ -1,48 +1,95 @@
-import { delay, getCollection, setCollection } from "./api";
+const API_URL = "http://localhost:5000/api";
+
+async function request(path, options = {}) {
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.success === false) {
+    throw new Error(result.message || "Request failed");
+  }
+
+  return result.data;
+}
+
+function normalizeProduct(product) {
+  return {
+    ...product,
+    id: String(product.id),
+    category: product.category_name || "",
+    uom: product.unit_of_measure || "pcs",
+    reorderPoint: Number(product.reorder_level || 0),
+    stock: {
+      total: Number(product.total_stock || 0),
+    },
+  };
+}
 
 export async function listProducts() {
-  await delay();
-  return getCollection("products");
+  const products = await request("/products");
+  return products.map(normalizeProduct);
 }
 
 export async function getProduct(id) {
-  await delay(150);
-  return getCollection("products").find((p) => p.id === id) || null;
+  const product = await request(`/products/${id}`);
+  return normalizeProduct(product);
 }
 
 export async function createProduct(data) {
-  await delay();
-  const products = getCollection("products");
-  const id = `p${products.length + 1}${Date.now() % 1000}`;
-  const product = {
-    id,
-    name: data.name,
-    sku: data.sku,
-    category: data.category,
-    uom: data.uom,
-    reorderPoint: Number(data.reorderPoint) || 0,
-    stock: { "wh-main": Number(data.initialStock) || 0, "wh-prod": 0, "wh-2": 0 },
-  };
-  setCollection("products", [...products, product]);
-  return product;
+  const product = await request("/products", {
+    method: "POST",
+    body: JSON.stringify({
+      name: data.name,
+      sku: data.sku,
+      category_id: data.categoryId || data.category_id,
+      unit_of_measure: data.uom || "pcs",
+      reorder_level: Number(data.reorderPoint) || 0,
+    }),
+  });
+
+  return normalizeProduct(product);
 }
 
 export async function updateProduct(id, data) {
-  await delay();
-  const products = getCollection("products");
-  const idx = products.findIndex((p) => p.id === id);
-  if (idx === -1) throw new Error("Product not found.");
-  products[idx] = { ...products[idx], ...data, reorderPoint: Number(data.reorderPoint) };
-  setCollection("products", products);
-  return products[idx];
+  const product = await request(`/products/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: data.name,
+      sku: data.sku,
+      category_id: data.categoryId || data.category_id,
+      unit_of_measure: data.uom,
+      reorder_level: Number(data.reorderPoint) || 0,
+    }),
+  });
+
+  return normalizeProduct(product);
+}
+
+export async function deleteProduct(id) {
+  return request(`/products/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export function totalStock(product) {
-  return Object.values(product.stock || {}).reduce((a, b) => a + b, 0);
+  if (product.stock?.total !== undefined) {
+    return Number(product.stock.total);
+  }
+
+  return Object.values(product.stock || {}).reduce(
+    (total, value) => total + Number(value || 0),
+    0
+  );
 }
 
 export function isLowStock(product) {
-  return totalStock(product) <= product.reorderPoint;
+  return totalStock(product) <= Number(product.reorderPoint || 0);
 }
 
 export function isOutOfStock(product) {

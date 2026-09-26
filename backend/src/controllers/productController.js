@@ -12,7 +12,7 @@ const checkValidation = (req) => {
 
 const PRODUCT_SELECT = `
   SELECT p.id, p.name, p.sku, p.unit_of_measure, p.category_id, c.name AS category_name,
-         p.created_at, p.updated_at,
+         p.created_at, p.updated_at, p.reorder_level,
          COALESCE((SELECT SUM(s.quantity) FROM stock s WHERE s.product_id = p.id), 0) AS total_stock
   FROM products p
   LEFT JOIN categories c ON c.id = p.category_id

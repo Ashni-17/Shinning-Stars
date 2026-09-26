@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "stocksense-backend",
   "version": "1.0.0",
   "description": "StockSense - Inventory Management System (IMS) backend",
@@ -23,5 +24,33 @@
   },
   "engines": {
     "node": ">=18.0.0"
+=======
+  "name": "stocksense-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^1.48.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.6.1",
+    "oxlint": "^1.81.0",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^3.4.19",
+    "vite": "^8.3.0"
+>>>>>>> 55583d49e8b9c244f68f6c59144b6c4adf33e5ac
   }
 }

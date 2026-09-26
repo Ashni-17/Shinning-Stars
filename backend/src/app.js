@@ -10,14 +10,12 @@ const deliveryRoutes = require('./routes/deliveryRoutes');
 const transferRoutes = require('./routes/transferRoutes');
 const adjustmentRoutes = require('./routes/adjustmentRoutes');
 const ledgerRoutes = require('./routes/ledgerRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
-// Allow a comma separated list of origins via CORS_ORIGIN, defaulting to
-// permissive local development.
+// CORS
 const allowedOrigins = (process.env.CORS_ORIGIN || '*')
   .split(',')
   .map((origin) => origin.trim());
@@ -28,21 +26,33 @@ app.use(
     credentials: true,
   })
 );
+
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root route
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'StockSense API is running',
-    data: { name: 'StockSense IMS Backend', version: '1.0.0' },
+    data: {
+      name: 'StockSense IMS Backend',
+      version: '1.0.0',
+    },
   });
 });
 
+// Health check
 app.get('/health', (req, res) => {
-  res.status(200).json({ success: true, message: 'OK', data: {} });
+  res.status(200).json({
+    success: true,
+    message: 'OK',
+    data: {},
+  });
 });
 
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/warehouses', warehouseRoutes);
@@ -51,8 +61,8 @@ app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/transfers', transferRoutes);
 app.use('/api/adjustments', adjustmentRoutes);
 app.use('/api/ledger', ledgerRoutes);
-app.use('/api/dashboard', dashboardRoutes);
 
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 

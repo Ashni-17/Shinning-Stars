@@ -208,3 +208,112 @@ CREATE TABLE delivery_items (
         FOREIGN KEY (location_id) REFERENCES locations(id)
         ON DELETE RESTRICT
 );
+
+CREATE TABLE transfers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transfer_number VARCHAR(50) NOT NULL UNIQUE,
+    source_warehouse_id INT NOT NULL,
+    destination_warehouse_id INT NOT NULL,
+    status ENUM(
+        'DRAFT',
+        'WAITING',
+        'READY',
+        'DONE',
+        'CANCELED'
+    ) NOT NULL DEFAULT 'DRAFT',
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    validated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_transfers_source_warehouse
+        FOREIGN KEY (source_warehouse_id) REFERENCES warehouses(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_transfers_destination_warehouse
+        FOREIGN KEY (destination_warehouse_id) REFERENCES warehouses(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_transfers_user
+        FOREIGN KEY (created_by) REFERENCES users(id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE transfer_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transfer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    source_location_id INT NOT NULL,
+    destination_location_id INT NOT NULL,
+    quantity DECIMAL(12,2) NOT NULL,
+
+    CONSTRAINT fk_transfer_items_transfer
+        FOREIGN KEY (transfer_id) REFERENCES transfers(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_transfer_items_product
+        FOREIGN KEY (product_id) REFERENCES products(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_transfer_items_source_location
+        FOREIGN KEY (source_location_id) REFERENCES locations(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_transfer_items_destination_location
+        FOREIGN KEY (destination_location_id) REFERENCES locations(id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE adjustments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    adjustment_number VARCHAR(50) NOT NULL UNIQUE,
+    location_id INT NOT NULL,
+    reason VARCHAR(255),
+    status ENUM(
+        'DRAFT',
+        'DONE',
+        'CANCELED'
+    ) NOT NULL DEFAULT 'DRAFT',
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    validated_at TIMESTAMP NULL,
+
+    CONSTRAINT fk_adjustments_location
+        FOREIGN KEY (location_id) REFERENCES locations(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_adjustments_user
+        FOREIGN KEY (created_by) REFERENCES users(id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE adjustment_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    adjustment_id INT NOT NULL,
+    product_id INT NOT NULL,
+    system_quantity DECIMAL(12,2) NOT NULL,
+    counted_quantity DECIMAL(12,2) NOT NULL,
+    difference DECIMAL(12,2) NOT NULL,
+
+    CONSTRAINT fk_adjustment_items_adjustment
+        FOREIGN KEY (adjustment_id) REFERENCES adjustments(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_adjustment_items_product
+        FOREIGN KEY (product_id) REFERENCES products(id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE password_reset_otps (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    otp VARCHAR(10) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_password_reset_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);
